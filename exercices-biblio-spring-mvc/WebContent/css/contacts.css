@@ -1,0 +1,8 @@
+label {
+	width: 130px;
+    float: left;
+}
+
+.overflow {
+	overflow: hidden;
+}

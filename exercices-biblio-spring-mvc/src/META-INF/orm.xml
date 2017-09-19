@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings xmlns="http://java.sun.com/xml/ns/persistence/orm"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_2_0.xsd"
+	version="2.0">
+	
+	<access>FIELD</access> <!-- utilisation ou des setters (PROPERTY) des classes des entités -->
+	
+	<named-query name="getAuteurByPrenomAndNom">
+		<query>select a from Auteur as a where lower(a.prenom) = lower(:prenom) and lower(a.nom) = lower(:nom)</query>
+	</named-query>
+	
+	<named-query name="getAllAuteurs">
+		<query>select a from Auteur as a</query>
+	</named-query>
+	
+	<named-query name="getCollectionByNom">
+		<query>select c from Collection as c where lower(c.nom) = lower(:nom)</query>
+	</named-query>
+	
+	<named-query name="getAllCollections">
+		<query>select c from Collection as c</query>
+	</named-query>
+	
+	<named-query name="getAllLivres">
+		<query>select l from Livre as l order by l.code</query>
+	</named-query>
+	
+	<named-query name="getEmprunteurByEmail">
+		<query>select e from Emprunteur e where e.email = :email</query>
+	</named-query>
+	
+	<named-query name="getEmprunteurByPrenomAndNomAndDdn">
+		<query>select e from Emprunteur e where lower(e.prenom) = lower(:prenom) and lower(e.nom) = lower(:nom) and e.dateDeNaissance = :ddn</query>
+	</named-query>
+	
+	<named-query name="getReservationsByEmprunteurCode">
+		<query>select r from Reservation as r where r.emprunteur.id = :code</query>
+	</named-query>
+
+	<named-query name="getReservationsByLivreCode">
+		<query>select r from Reservation as r where r.livre.code = :code</query>
+	</named-query>
+	
+	<named-query name="findAllByAuteurAndCollectionIdAndTitreContainsIgnoreCase">
+		<query>select l from Livre as l where :auteur member of l.auteurs and l.collection.id = :collection and lower(l.titre) like lower(:titre)</query>
+	</named-query>
+	
+	<named-query name="findAllByAuteurAndCollectionId">
+		<query>select l from Livre as l where :auteur member of l.auteurs and l.collection.id = :collection</query>
+	</named-query>
+	
+	<named-query name="findAllByAuteurAndTitreContainsIgnoreCase">
+		<query>select l from Livre as l where :auteur member of l.auteurs and lower(l.titre) like lower(:titre)</query>
+	</named-query>
+	
+	<named-query name="findAllByAuteur">
+		<query>select l from Livre as l where :auteur member of l.auteurs</query>
+	</named-query>
+	
+	<named-query name="findAllByCollectionIdAndTitreContainsIgnoreCase">
+		<query>select l from Livre as l where l.collection.id = :collection and lower(l.titre) like lower(:titre)</query>
+	</named-query>
+	
+	<named-query name="findAllByCollectionId">
+		<query>select l from Livre as l where l.collection.id = :collection</query>
+	</named-query>
+	
+	<named-query name="findAllByTitreContainsIgnoreCase">
+		<query>select l from Livre as l where lower(l.titre) like lower(:titre)</query>
+	</named-query>
+	
+	<named-query name="findAll">
+		<query>select l from Livre as l</query>
+	</named-query>
+	
+	<named-native-query name="searchLivresNativeSql" result-class="be.steformations.pc.java_data.biblio.beans.LivreImpl">
+		<query>
+			select livres.* 
+			from livres join collections on liv_collection = col_code 
+	    				left join livres_auteurs on liv_code = livre_id 
+	    				left join auteurs on auteur_id = aut_code
+			where liv_titre like ?1 and cast(col_code as varchar) like ?2 and cast(aut_code as varchar) like ?3		
+		</query>
+	</named-native-query>
+	
+	<entity class="be.steformations.pc.java_data.biblio.beans.AuteurImpl" name="Auteur">
+		<table name="auteurs"/>
+		<attributes>
+			<id name="id"><column name="aut_code"/><generated-value strategy="IDENTITY"/></id>
+			<basic name="prenom"><column name="aut_prenom"/></basic>
+			<basic name="nom"><column name="aut_nom"/></basic>
+		</attributes>
+	</entity>
+	
+	<entity class="be.steformations.pc.java_data.biblio.beans.CollectionImpl" name="Collection">
+		<table name="collections" />
+		<attributes>
+			<id name="id"><column name="col_code"/><generated-value strategy="IDENTITY"/></id>
+			<basic name="nom"><column name="col_nom"/></basic>
+		</attributes>
+	</entity>
+	
+	<entity class="be.steformations.pc.java_data.biblio.beans.LivreImpl" name="Livre">
+		<table name="livres" />
+		<attributes>
+			<id name="code"><column name="liv_code"/></id>
+			<basic name="titre"><column name="liv_titre"/></basic>
+			<basic name="numeroEdition"><column name="liv_edition"/></basic>
+			<basic name="nombreDePages"><column name="liv_pages"/></basic>
+			<basic name="dateDeParution"><column name="liv_parution"/><temporal>DATE</temporal></basic>
+			<many-to-one name="collection"><join-column name="liv_collection"/></many-to-one>
+			<many-to-many name="auteurs">
+				<join-table name="livres_auteurs">
+					<join-column name="livre_id"/>
+					<inverse-join-column name="auteur_id"/>
+				</join-table>
+			</many-to-many>
+		</attributes>
+	</entity>
+	
+	<entity class="be.steformations.pc.java_data.biblio.beans.EmprunteurImpl" name="Emprunteur">
+		<table name="emprunteurs" />
+		<attributes>
+			<id name="id"><column name="emp_code"/><generated-value strategy="IDENTITY"/></id>
+			<basic name="prenom"><column name="emp_prenom"/></basic>
+			<basic name="nom"><column name="emp_nom"/></basic>
+			<basic name="email"><column name="emp_email"/></basic>
+			<basic name="dateDeNaissance"><column name="emp_ddn"/><temporal>DATE</temporal></basic>
+			<basic name="telephone"><column name="emp_tel"/></basic>
+		</attributes>
+	</entity>
+	
+	<entity class="be.steformations.pc.java_data.biblio.beans.ReservationImpl" name="Reservation">
+		<table name="reservations" />
+		<attributes>
+			<id name="id"><column name="res_code"/><generated-value strategy="IDENTITY"/></id>
+			<basic name="dateDeReservation"><column name="res_date"/><temporal>DATE</temporal></basic>
+			<many-to-one name="emprunteur"><join-column name="res_emprunteur"/></many-to-one>
+			<many-to-one name="livre"><join-column name="res_livre"/></many-to-one>
+		</attributes>
+	</entity>
+	
+</entity-mappings>
